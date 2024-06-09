@@ -9,7 +9,7 @@ import (
 )
 
 type Message struct {
-	Peer string
+	Peer *Peer
 	Msg  string
 }
 

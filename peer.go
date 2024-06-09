@@ -31,7 +31,18 @@ func (p *Peer) ReadFromPeer() error {
 
 		msgBuf := make([]byte, n)
 		copy(msgBuf, buf[:n])
-		p.msgCh <- Message{Peer: p.Name, Msg: string(msgBuf)}
+		p.msgCh <- Message{Peer: p, Msg: string(msgBuf)}
 
 	}
+}
+
+
+func (p *Peer) SendToPeer(resp string) error {
+	_, err := p.Conn.Write([]byte(resp))
+	if err != nil{
+		log.Println("failed to send response to peer: ", p.Name)
+		return err 
+	}
+
+	return nil
 }

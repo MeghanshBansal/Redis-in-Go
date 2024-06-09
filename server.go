@@ -77,27 +77,38 @@ func (s *Server) HandleConn(conn *net.Conn) error {
 func (s *Server) handleRawMessage(rawMsg Message) error {
 	cmd, err := rawMsg.parseCommand()
 	if err != nil {
-		log.Println("failed to parse Command from user ", rawMsg.Peer)
-		return  err
+		log.Println("failed to parse Command from user ", rawMsg.Peer.Name)
+		return err
 	}
 
+	var res string
 	switch cmd.CMD {
 	case CommandSet:
 		s.Cache.HandleSetCommand(cmd)
+		res = "true"
 	case CommadnGet:
-		_, err := s.Cache.HandleGetCommand(cmd)
+		res, err = s.Cache.HandleGetCommand(cmd)
 		if err != nil {
 			log.Println("Command not found")
 		}
-		// todo: something with res
 	case CommandDel:
 		s.Cache.HandleDelCommand(cmd)
+		res = "true"
 	case CommandHas:
-		_ = s.Cache.HandleHasCommand(cmd)
-		// todo: something with the res
+		if s.Cache.HandleHasCommand(cmd) {
+			res = "true"
+		} else {
+			res = "false"
+		}
 	}
 
-	return  nil
+	err = rawMsg.Peer.SendToPeer(res)
+	if err != nil {
+		log.Println("failed to send response to peer: ", rawMsg.Peer.Name)
+		return err
+	}
+
+	return nil
 }
 
 func (s *Server) AddPeer() {
