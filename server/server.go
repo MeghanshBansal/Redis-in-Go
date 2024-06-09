@@ -86,7 +86,7 @@ func (s *Server) handleRawMessage(rawMsg Message) error {
 	case CommandSet:
 		s.Cache.HandleSetCommand(cmd)
 		res = "true"
-	case CommadnGet:
+	case CommandGet:
 		res, err = s.Cache.HandleGetCommand(cmd)
 		if err != nil {
 			log.Println("Command not found")
@@ -118,7 +118,7 @@ func (s *Server) AddPeer() {
 			if err := s.handleRawMessage(rawMsg); err != nil {
 				log.Println("failed to decode raw message received")
 			}
-			log.Printf("msg from %s: %s\n", rawMsg.Peer, rawMsg.Msg)
+			log.Printf("msg from %s: %s\n", rawMsg.Peer.Name, rawMsg.Msg)
 		case peer := <-s.quitCh:
 			log.Printf("%s Peer has left\n", peer.Name)
 			return

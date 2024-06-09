@@ -28,8 +28,8 @@ func (m *Message) parseCommand() (Command, error) {
 		com.value = commandArray[3]
 	} else if len(commandArray) == 2 {
 		switch commandArray[0] {
-		case CommadnGet:
-			com = Command{CMD: CommadnGet, key: commandArray[1]}
+		case CommandGet:
+			com = Command{CMD: CommandGet, key: commandArray[1]}
 		case CommandDel:
 			com = Command{CMD: CommandDel, key: commandArray[1]}
 		case CommandHas:

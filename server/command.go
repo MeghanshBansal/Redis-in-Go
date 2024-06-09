@@ -6,7 +6,7 @@ import (
 
 const (
 	CommandSet = "SET"
-	CommadnGet = "GET"
+	CommandGet = "GET"
 	CommandDel = "DEL"
 	CommandHas = "HAS"
 )
