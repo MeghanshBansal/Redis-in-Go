@@ -12,10 +12,10 @@ type Cache struct {
 }
 
 type CacheI interface {
-	HandleSetCommand(cmd Command) (bool, error)
+	HandleSetCommand(cmd Command)
 	HandleGetCommand(cmd Command) (string, error)
-	HandleDelCommand(cmd Command) (bool, error)
-	HandleHasCommand(cmd Command) (bool, error)
+	HandleDelCommand(cmd Command)
+	HandleHasCommand(cmd Command) bool
 }
 
 func NewCache() CacheI {
@@ -25,15 +25,13 @@ func NewCache() CacheI {
 	}
 }
 
-func (c Cache) HandleSetCommand(cmd Command) (bool, error) {
+func (c Cache) HandleSetCommand(cmd Command) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
 	c.m[cmd.key] = cmd.value
-	go c.deleteKey(cmd.key, cmd.t)
-	return true, nil
+	go c.deleteKeyAfter(cmd.key, cmd.t)
 }
-
 
 func (c Cache) HandleGetCommand(cmd Command) (string, error) {
 	c.mu.Lock()
@@ -45,26 +43,24 @@ func (c Cache) HandleGetCommand(cmd Command) (string, error) {
 	return "", errors.New("key not found")
 }
 
-
-func (c Cache) HandleDelCommand(cmd Command) (bool, error) {
+func (c Cache) HandleDelCommand(cmd Command) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
 	delete(c.m, cmd.key)
-	return true, nil
 }
 
-func (c Cache) HandleHasCommand(cmd Command) (bool, error) {
+func (c Cache) HandleHasCommand(cmd Command) bool {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
 	if _, ok := c.m[cmd.key]; ok {
-		return true, nil
+		return true
 	}
-	return false, nil
+	return false
 }
 
-func (c Cache) deleteKey(key string, t time.Duration) {
+func (c Cache) deleteKeyAfter(key string, t time.Duration) {
 	<-time.After(t)
 	c.mu.Lock()
 	defer c.mu.Unlock()

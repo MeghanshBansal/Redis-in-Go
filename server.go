@@ -74,36 +74,37 @@ func (s *Server) HandleConn(conn *net.Conn) error {
 	return nil
 }
 
-func (s *Server) handleRawMessage(rawMsg Message) (interface{}, error) {
+func (s *Server) handleRawMessage(rawMsg Message) error {
 	cmd, err := rawMsg.parseCommand()
 	if err != nil {
 		log.Println("failed to parse Command from user ", rawMsg.Peer)
-		return "", err
-	}
-	var res interface{}
-	switch cmd.CMD {
-	case CommandSet:
-		res, err = s.Cache.HandleDelCommand(cmd)
-	case CommadnGet:
-		res, err = s.Cache.HandleGetCommand(cmd)
-	case CommandDel:
-		res, err = s.Cache.HandleDelCommand(cmd)
-	case CommandHas:
-		res, err = s.Cache.HandleHasCommand(cmd)
+		return  err
 	}
 
-	if err != nil {
-		log.Println("Error", err)
-		return nil, err
+	switch cmd.CMD {
+	case CommandSet:
+		s.Cache.HandleSetCommand(cmd)
+	case CommadnGet:
+		_, err := s.Cache.HandleGetCommand(cmd)
+		if err != nil {
+			log.Println("Command not found")
+		}
+		// todo: something with res
+	case CommandDel:
+		s.Cache.HandleDelCommand(cmd)
+	case CommandHas:
+		_ = s.Cache.HandleHasCommand(cmd)
+		// todo: something with the res
 	}
-	return res, nil
+
+	return  nil
 }
 
 func (s *Server) AddPeer() {
 	for {
 		select {
 		case rawMsg := <-s.msgCh:
-			if _, err := s.handleRawMessage(rawMsg); err != nil {
+			if err := s.handleRawMessage(rawMsg); err != nil {
 				log.Println("failed to decode raw message received")
 			}
 			log.Printf("msg from %s: %s\n", rawMsg.Peer, rawMsg.Msg)
