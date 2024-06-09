@@ -1,9 +1,13 @@
 package main
 
-import "sync"
+import (
+	"errors"
+	"sync"
+	"time"
+)
 
 type Cache struct {
-	c  map[string]string
+	m  map[string]string
 	mu *sync.RWMutex
 }
 
@@ -16,20 +20,53 @@ type CacheI interface {
 
 func NewCache() CacheI {
 	return Cache{
-		c:  make(map[string]string),
+		m:  make(map[string]string),
 		mu: &sync.RWMutex{},
 	}
 }
 
 func (c Cache) HandleSetCommand(cmd Command) (bool, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	c.m[cmd.key] = cmd.value
+	go c.deleteKey(cmd.key, cmd.t)
 	return true, nil
 }
-func (s Cache) HandleGetCommand(cmd Command) (string, error) {
-	return "", nil
+
+
+func (c Cache) HandleGetCommand(cmd Command) (string, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if val, ok := c.m[cmd.key]; ok {
+		return val, nil
+	}
+	return "", errors.New("key not found")
 }
-func (s Cache) HandleDelCommand(cmd Command) (bool, error) {
+
+
+func (c Cache) HandleDelCommand(cmd Command) (bool, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	delete(c.m, cmd.key)
 	return true, nil
 }
-func (s Cache) HandleHasCommand(cmd Command) (bool, error) {
-	return true, nil
+
+func (c Cache) HandleHasCommand(cmd Command) (bool, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if _, ok := c.m[cmd.key]; ok {
+		return true, nil
+	}
+	return false, nil
+}
+
+func (c Cache) deleteKey(key string, t time.Duration) {
+	<-time.After(t)
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	delete(c.m, key)
 }
