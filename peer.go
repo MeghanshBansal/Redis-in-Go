@@ -6,31 +6,25 @@ import (
 	"net"
 )
 
-type Message struct {
-	Peer string 
-	Msg string
-}
-
 type Peer struct {
-    Conn net.Conn
-	Name string 
+	Conn  net.Conn
+	Name  string
 	msgCh chan Message
 }
 
 func NewPeer(conn net.Conn, Name string, msgCh chan Message) *Peer {
 	return &Peer{
-		Conn: conn,
-		Name: Name,
+		Conn:  conn,
+		Name:  Name,
 		msgCh: msgCh,
 	}
 }
-
 
 func (p *Peer) ReadFromPeer() error {
 	buf := make([]byte, 1024)
 	for {
 		n, err := p.Conn.Read(buf)
-		if err != nil{
+		if err != nil {
 			log.Println("failed to read message from the peer: ", p.Name)
 			return errors.New("failed to read")
 		}
@@ -38,7 +32,6 @@ func (p *Peer) ReadFromPeer() error {
 		msgBuf := make([]byte, n)
 		copy(msgBuf, buf[:n])
 		p.msgCh <- Message{Peer: p.Name, Msg: string(msgBuf)}
-		
+
 	}
-	return nil
 }
